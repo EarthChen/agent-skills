@@ -78,42 +78,47 @@ git diff master --name-only | grep -E "(api|io|interfaces)"
 
 #### 一、必须按顺序部署（有依赖关系）
 
-以下项目存在层级依赖，必须按顺序部署和上线：
+存在层级依赖的项目，必须按依赖顺序部署和上线：
 
 ```
-ultron-dependency (基础依赖)
+基础依赖包 (common/dependency)
        ↓
-ultron-wrapper (公共包装层，依赖 dependency)
+公共包装层 (wrapper/starter)
        ↓
-ultron-statistics (依赖 wrapper)
+中间层服务 (依赖上层)
        ↓
-user-moa (依赖 wrapper、statistics)
-       ↓
-ultron-composite (依赖 wrapper、dependency、user-moa)
+聚合服务 (composite/gateway)
 ```
 
-| 顺序 | 项目 | 依赖说明 |
-|-----|-----|---------|
-| 1 | ultron-dependency | 基础依赖包，无外部依赖 |
-| 2 | ultron-wrapper | 依赖 ultron-dependency |
-| 3 | ultron-statistics | 依赖 ultron-wrapper |
-| 4 | user-moa | 依赖 ultron-wrapper |
-| 5 | ultron-composite | 依赖 wrapper、dependency、user-moa |
+| 顺序 | 类型 | 说明 |
+|-----|-----|-----|
+| 1 | 基础依赖包 | 无外部依赖，被其他项目引用 |
+| 2 | 公共包装层 | 封装外部服务调用，依赖基础依赖包 |
+| 3 | 中间层服务 | 业务模块，依赖包装层 |
+| 4 | 聚合服务 | 组合多个服务，依赖中间层 |
+
+**分析依赖的方法**：
+
+```bash
+# 检查项目的pom.xml中引用了哪些内部依赖
+grep -E "<groupId>com\.your\.company" pom.xml
+```
 
 #### 二、无顺序要求（互相独立）
 
-以下项目之间无直接依赖关系，可并行部署上线：
-
-| 项目 | 说明 |
-|-----|-----|
-| ultron-basic-user | 基础用户服务 |
-| ultron-guild | 公会服务 |
-| ultron-relation | 关系服务 |
-| ultron-sayhello | 打招呼服务 |
-| ultron-api | API 网关 |
-| ultron-activity-independence | 独立活动服务 |
+项目之间无直接依赖关系的，可并行部署上线：
+- 独立的业务服务
+- 不互相引用的模块
+- 只依赖已部署的基础包
 
 **注意**：虽然这些项目可并行上线，但它们可能依赖"必须按顺序部署"中的项目，因此需要等待依赖项先部署完成
+
+#### 三、梳理上线顺序的步骤
+
+1. **绘制依赖图**：分析所有项目的 pom.xml，找出依赖关系
+2. **分层**：将项目按依赖层级分组
+3. **确定顺序**：底层先部署，上层后部署
+4. **识别并行项**：同层无互相依赖的项目可并行
 
 ### 第六步：打包部署
 
@@ -147,7 +152,7 @@ git commit -m "chore: 修改SNAPSHOT依赖为正式版本 (分支名)"
 
 ## 二方包版本更新规则
 
-当 ultron-dependency 或 ultron-wrapper 等二方包有代码修改时：
+当基础依赖包或公共包装层等二方包有代码修改时：
 
 1. **升级二方包版本号**（在 master 基础上 +1）
 2. **检查哪些项目主动引用了该二方包的 SNAPSHOT 版本**
@@ -156,7 +161,8 @@ git commit -m "chore: 修改SNAPSHOT依赖为正式版本 (分支名)"
 检查方法：
 
 ```bash
-git diff master -- pom.xml | grep -E "ultron.dependency|ultron-wrapper"
+# 检查哪些项目修改了二方包版本引用（对比master分支）
+git diff master -- pom.xml | grep -E "版本号属性名"
 ```
 
 ## 常见问题
