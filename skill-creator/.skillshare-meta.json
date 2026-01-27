@@ -1,0 +1,8 @@
+{
+  "source": "https://github.com/langgenius/dify/tree/main/.agents/skills/skill-creator",
+  "type": "github-subdir",
+  "installed_at": "2026-01-27T18:17:02.585565+08:00",
+  "repo_url": "https://github.com/langgenius/dify.git",
+  "subdir": ".agents/skills/skill-creator",
+  "version": "e482588"
+}

@@ -1,0 +1,8 @@
+{
+  "source": "https://github.com/langgenius/dify/tree/main/.agents/skills/web-design-guidelines",
+  "type": "github-subdir",
+  "installed_at": "2026-01-27T18:18:03.962098+08:00",
+  "repo_url": "https://github.com/langgenius/dify.git",
+  "subdir": ".agents/skills/web-design-guidelines",
+  "version": "e482588"
+}
