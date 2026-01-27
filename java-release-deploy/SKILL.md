@@ -74,14 +74,46 @@ grep -rn "SNAPSHOT" "项目目录/pom.xml"
 git diff master --name-only | grep -E "(api|io|interfaces)"
 ```
 
-### 第五步：分析依赖关系
+### 第五步：分析依赖关系与上线顺序
 
-按依赖层级排序打包顺序（从底层到上层）：
+#### 一、必须按顺序部署（有依赖关系）
 
-1. 基础依赖包（如 ultron-dependency）
-2. 公共包装层（如 ultron-wrapper）
-3. 业务模块（依赖上述包的项目）
-4. 聚合服务
+以下项目存在层级依赖，必须按顺序部署和上线：
+
+```
+ultron-dependency (基础依赖)
+       ↓
+ultron-wrapper (公共包装层，依赖 dependency)
+       ↓
+ultron-statistics (依赖 wrapper)
+       ↓
+user-moa (依赖 wrapper、statistics)
+       ↓
+ultron-composite (依赖 wrapper、dependency、user-moa)
+```
+
+| 顺序 | 项目 | 依赖说明 |
+|-----|-----|---------|
+| 1 | ultron-dependency | 基础依赖包，无外部依赖 |
+| 2 | ultron-wrapper | 依赖 ultron-dependency |
+| 3 | ultron-statistics | 依赖 ultron-wrapper |
+| 4 | user-moa | 依赖 ultron-wrapper |
+| 5 | ultron-composite | 依赖 wrapper、dependency、user-moa |
+
+#### 二、无顺序要求（互相独立）
+
+以下项目之间无直接依赖关系，可并行部署上线：
+
+| 项目 | 说明 |
+|-----|-----|
+| ultron-basic-user | 基础用户服务 |
+| ultron-guild | 公会服务 |
+| ultron-relation | 关系服务 |
+| ultron-sayhello | 打招呼服务 |
+| ultron-api | API 网关 |
+| ultron-activity-independence | 独立活动服务 |
+
+**注意**：虽然这些项目可并行上线，但它们可能依赖"必须按顺序部署"中的项目，因此需要等待依赖项先部署完成
 
 ### 第六步：打包部署
 
